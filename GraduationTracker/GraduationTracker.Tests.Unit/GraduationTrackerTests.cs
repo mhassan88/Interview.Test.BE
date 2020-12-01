@@ -8,81 +8,110 @@ namespace GraduationTracker.Tests.Unit
     [TestClass]
     public class GraduationTrackerTests
     {
-        [TestMethod]
-        public void TestHasCredits()
+        Diploma diploma;
+        Student[] students;
+        GraduationTracker tracker;
+        List<Tuple<bool, STANDING>> graduated;
+
+        [TestInitialize]
+        public void TestInitialize()
         {
-            var tracker = new GraduationTracker();
+            tracker = new GraduationTracker();
 
-            var diploma = new Diploma
-            {
-                Id = 1,
-                Credits = 4,
-                Requirements = new int[] { 100, 102, 103, 104 }
-            };
+            diploma = Repository.GetDiploma(1);
 
-            var students = new[]
+            students = new[]
             {
-               new Student
-               {
-                   Id = 1,
-                   Courses = new Course[]
-                   {
-                        new Course{Id = 1, Name = "Math", Mark=95 },
-                        new Course{Id = 2, Name = "Science", Mark=95 },
-                        new Course{Id = 3, Name = "Literature", Mark=95 },
-                        new Course{Id = 4, Name = "Physichal Education", Mark=95 }
-                   }
-               },
-               new Student
-               {
-                   Id = 2,
-                   Courses = new Course[]
-                   {
-                        new Course{Id = 1, Name = "Math", Mark=80 },
-                        new Course{Id = 2, Name = "Science", Mark=80 },
-                        new Course{Id = 3, Name = "Literature", Mark=80 },
-                        new Course{Id = 4, Name = "Physichal Education", Mark=80 }
-                   }
-               },
-            new Student
-            {
-                Id = 3,
-                Courses = new Course[]
-                {
-                    new Course{Id = 1, Name = "Math", Mark=50 },
-                    new Course{Id = 2, Name = "Science", Mark=50 },
-                    new Course{Id = 3, Name = "Literature", Mark=50 },
-                    new Course{Id = 4, Name = "Physichal Education", Mark=50 }
-                }
-            },
-            new Student
-            {
-                Id = 4,
-                Courses = new Course[]
-                {
-                    new Course{Id = 1, Name = "Math", Mark=40 },
-                    new Course{Id = 2, Name = "Science", Mark=40 },
-                    new Course{Id = 3, Name = "Literature", Mark=40 },
-                    new Course{Id = 4, Name = "Physichal Education", Mark=40 }
-                }
-            }
-
+              Repository.GetStudent(1),
+              Repository.GetStudent(2),
+              Repository.GetStudent(3),
+              Repository.GetStudent(4),
 
             //tracker.HasGraduated()
-        };
-            
-            var graduated = new List<Tuple<bool, STANDING>>();
+            };
 
-            foreach(var student in students)
+            graduated = new List<Tuple<bool, STANDING>>();
+
+            foreach (var student in students)
             {
-                graduated.Add(tracker.HasGraduated(diploma, student));      
+                graduated.Add(tracker.HasGraduated(diploma, student));
             }
+        }
 
-            
-            Assert.IsFalse(graduated.Any());
+        [TestMethod]
+        public void TestPassedStudentCanNotHaveRemedialStanding()
+        {
+
+            Assert.IsFalse(
+                graduated.Any(
+                    val =>  val.Item1 == true &&
+                    val.Item2 == STANDING.Remedial
+                )
+            );
 
         }
 
+        [TestMethod]
+        public void TestStudentWhoFailedCanNotHaveGoodStanding()
+        {
+
+            Assert.IsFalse(
+                graduated.Any(
+                    val => val.Item1 == false && (
+                        val.Item2 == STANDING.Average || 
+                        val.Item2 == STANDING.MagnaCumLaude || 
+                        val.Item2 == STANDING.SumaCumLaude
+                        )
+                )
+            );
+
+        }
+
+        [TestMethod]
+        public void TestStudentFailed()
+        {
+            Assert.IsTrue(
+                graduated[3].Item1 == false && 
+                graduated[3].Item2 == STANDING.Remedial
+            );
+        }
+
+        [TestMethod]
+        public void TestStudentWithAverageStanding()
+        {
+            Assert.IsTrue(
+                graduated[2].Item1 == true &&
+                graduated[2].Item2 == STANDING.Average
+            );
+        }
+
+        [TestMethod]
+        public void TestStudentWithMagnaCumLaudeStanding()
+        {
+            Assert.IsTrue(
+                graduated[1].Item1 == true &&
+                graduated[1].Item2 == STANDING.MagnaCumLaude
+            );
+        }
+
+        [TestMethod]
+        public void TestStudentWithSumaCumLaudeStanding()
+        {
+            Assert.IsTrue(
+                graduated[0].Item1 == true &&
+                graduated[0].Item2 == STANDING.SumaCumLaude
+            );
+        }
+
+        [TestMethod]
+        public void TestStudentWithNoneStanding()
+        {
+            Assert.IsFalse(
+                graduated.Any(val => val.Item1 == false &&
+                val.Item2 == STANDING.None
+                )
+            );
+        }
 
     }
 }
